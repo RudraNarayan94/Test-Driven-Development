@@ -80,9 +80,16 @@ class SweetAPITestCase(APITestCase):
     def test_authenticated_user_can_update_sweet(self):
         """Test authenticated user can update a sweet."""
         self.client.force_authenticate(user=self.regular_user)
-        updated_data = {'name': 'New Chocolate Bar'}
+        
+        updated_data = {
+            'name': 'New Chocolate Bar',
+            'category': self.sweet1.category,
+            'price': str(self.sweet1.price),
+            'quantity_in_stock': self.sweet1.quantity_in_stock
+        }
         update_url = reverse('sweet-detail', kwargs={'pk': self.sweet1.id})
         response = self.client.put(update_url, data=updated_data, format='json')
+        
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.sweet1.refresh_from_db()
         self.assertEqual(self.sweet1.name, 'New Chocolate Bar')
