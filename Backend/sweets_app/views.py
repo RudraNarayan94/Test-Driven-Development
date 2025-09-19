@@ -4,7 +4,15 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 
-from .serializers import UserRegistrationSerializer, UserSerializer, LoginSerializer
+from .serializers import UserRegistrationSerializer, UserSerializer, LoginSerializer, SweetSerializer
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics
+from rest_framework.filters import SearchFilter
+from rest_framework.permissions import IsAuthenticated
+
+from .models import Sweet
+from .permissions import IsAdminUser
 
 class UserRegistrationView(APIView):
     """
@@ -48,3 +56,12 @@ class UserLoginView(APIView):
             return Response({
                 'message': 'Invalid credentials'
             }, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class SweetListCreateView(generics.ListCreateAPIView):
+    queryset = Sweet.objects.all()
+    serializer_class = SweetSerializer
+    permission_classes = [IsAuthenticated]
+
+
+
