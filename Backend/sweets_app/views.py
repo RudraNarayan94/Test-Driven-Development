@@ -108,9 +108,9 @@ class SweetRestockView(APIView):
         try:
             quantity = int(quantity)
             if quantity <= 0:
-                return Response({'error': 'quantity must be a positive integer.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Quantity must be a positive integer.'}, status=status.HTTP_400_BAD_REQUEST)
         except (ValueError, TypeError):
-            return Response({'error': 'quantity must be a valid integer.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Quantity must be a positive integer.'}, status=status.HTTP_400_BAD_REQUEST)
 
         sweet.quantity_in_stock += quantity
         sweet.save()
