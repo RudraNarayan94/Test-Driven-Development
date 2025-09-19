@@ -196,3 +196,103 @@ class UserRegistrationTestCase(APITestCase):
         # Assert response contains error message about username
         response_data = response.json()
         self.assertIn('username', response_data)
+
+class UserLoginTestCase(APITestCase):
+    """
+    Test cases for user login endpoint.
+    """
+    def setUp(self):
+        """
+        Set up a valid user to be used for login tests.
+        """
+        self.login_url = reverse('login')
+        self.username = 'testuser'
+        self.password = 'testpassword123'
+        self.email = 'testuser@example.com'
+        self.user = CustomUser.objects.create_user(
+            username=self.username,
+            email=self.email,
+            password=self.password
+        )
+
+    def test_user_can_login_successfully(self):
+        """
+        Test Case 1 (Success): User can log in with valid credentials.
+        """
+        login_data = {
+            'username': self.username,
+            'password': self.password
+        }
+        
+        response = self.client.post(
+            self.login_url,
+            data=json.dumps(login_data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        self.assertIn('access_token', response_data)
+        self.assertIn('refresh_token', response_data)
+        self.assertIn('user', response_data)
+        self.assertEqual(response_data['user']['username'], self.username)
+        self.assertEqual(response_data['user']['email'], self.email)
+        
+    def test_login_fails_with_invalid_password(self):
+        """
+        Test Case 2 (Failure): Login fails with an invalid password.
+        """
+        login_data = {
+            'username': self.username,
+            'password': 'wrongpassword'
+        }
+
+        response = self.client.post(
+            self.login_url,
+            data=json.dumps(login_data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        response_data = response.json()
+        self.assertIn('message', response_data)
+        self.assertEqual(response_data['message'], 'Invalid credentials')
+
+    def test_login_fails_with_non_existent_user(self):
+        """
+        Test Case 3 (Failure): Login fails with a non-existent username.
+        """
+        login_data = {
+            'username': 'nonexistentuser',
+            'password': 'anypassword'
+        }
+
+        response = self.client.post(
+            self.login_url,
+            data=json.dumps(login_data),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        response_data = response.json()
+        self.assertIn('message', response_data)
+        self.assertEqual(response_data['message'], 'Invalid credentials')
+    
+    def test_login_fails_with_missing_data(self):
+        """
+        Test Case 4 (Failure): Login fails with missing fields.
+        """
+        login_data = {
+            'username': self.username
+        }
+        
+        response = self.client.post(
+            self.login_url,
+            data=json.dumps(login_data),
+            content_type='application/json'
+        )
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response_data = response.json()
+        self.assertIn('password', response_data)
+        self.assertEqual(response_data['password'][0], 'This field is required.')
