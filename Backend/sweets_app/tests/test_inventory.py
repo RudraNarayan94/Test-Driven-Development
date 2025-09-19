@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 from sweets_app.models import Sweet, CustomUser
 import json
 
-class SweetAPITestCase(APITestCase):
+class InventoryAPITestCase(APITestCase):
     def setUp(self):
         self.list_create_url = reverse('sweet-list-create')
         self.search_url = reverse('sweet-search')
@@ -15,7 +15,6 @@ class SweetAPITestCase(APITestCase):
         self.sweet2 = Sweet.objects.create(name='Gummy Bear', category='Gummy', price='1.50', quantity_in_stock=100)
         self.sweet3 = Sweet.objects.create(name='Jelly Beans', category='Gummy', price='1.00', quantity_in_stock=120)
 
-    # ... (Your existing tests for other endpoints go here) ...
 
     def test_purchase_sweet_successfully(self):
         """Test a user can purchase a sweet, decreasing the quantity."""

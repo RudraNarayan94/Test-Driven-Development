@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from .models import Sweet
 from .permissions import IsAdminUser
+from django.shortcuts import get_object_or_404
 
 class UserRegistrationView(APIView):
     """
@@ -81,3 +82,37 @@ class SweetSearchView(generics.ListAPIView):
     filter_backends = [SearchFilter]
     search_fields = ['name', 'category', 'price'] 
     permission_classes = [IsAuthenticated]
+
+
+class SweetPurchaseView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        sweet = get_object_or_404(Sweet, pk=pk)
+
+        if sweet.quantity_in_stock > 0:
+            sweet.quantity_in_stock -= 1
+            sweet.save()
+            serializer = SweetSerializer(sweet)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'This sweet is out of stock.'}, status=status.HTTP_400_BAD_REQUEST)
+
+class SweetRestockView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        sweet = get_object_or_404(Sweet, pk=pk)
+        quantity = request.data.get('quantity')
+        
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                return Response({'error': 'quantity must be a positive integer.'}, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, TypeError):
+            return Response({'error': 'quantity must be a valid integer.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        sweet.quantity_in_stock += quantity
+        sweet.save()
+        serializer = SweetSerializer(sweet)
+        return Response(serializer.data, status=status.HTTP_200_OK)
