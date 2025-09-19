@@ -63,5 +63,21 @@ class SweetListCreateView(generics.ListCreateAPIView):
     serializer_class = SweetSerializer
     permission_classes = [IsAuthenticated]
 
+class SweetDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Sweet.objects.all()
+    serializer_class = SweetSerializer
+    
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [IsAuthenticated]
+        
+        return [permission() for permission in permission_classes]
 
-
+class SweetSearchView(generics.ListAPIView):
+    queryset = Sweet.objects.all()
+    serializer_class = SweetSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['name', 'category', 'price'] 
+    permission_classes = [IsAuthenticated]
