@@ -95,16 +95,14 @@ DATABASES = {
 
 
 # DATABASES = {
-#   'default': {
-#     'ENGINE': 'django.db.backends.{}'.format(
-#              os.getenv('DATABASE_ENGINE', 'sqlite3')
-#     ),
-#     'NAME': os.environ.get('DB_NAME', 'postDb'),
-#     'USER': os.environ.get('DB_USER', 'postDbUser'),
-#     'PASSWORD': os.environ.get('DB_PASSWORD', 'postDbPassword'),
-#     'HOST': os.environ.get('DB_HOST', 'localhost'),
-#     'PORT': os.environ.get('DB_PORT', '5432'),
-#   }
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('DB_NAME', 'sweet_shop_db'),
+#         'USER': os.environ.get('DB_USER', 'sweet_shop_user'),
+#         'PASSWORD': os.environ.get('DB_PASSWORD', 'a_secure_password'),
+#         'HOST': os.environ.get('DB_HOST', 'localhost'),
+#         'PORT': os.environ.get('DB_PORT', '5432'),
+#     }
 # }
 
 REST_FRAMEWORK = {
