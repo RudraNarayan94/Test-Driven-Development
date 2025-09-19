@@ -42,12 +42,16 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework_simplejwt',
-    'corsheaders',  
+    'corsheaders',
+    'django-filters',  
     # apps
     'sweets_app',
 ]
 AUTH_USER_MODEL = 'sweets_app.CustomUser'
 
+DEFAULT_FILTER_BACKENDS = [
+    'django_filters.rest_framework.DjangoFilterBackend',
+]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
