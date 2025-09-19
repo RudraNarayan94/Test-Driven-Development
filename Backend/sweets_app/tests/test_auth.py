@@ -1,10 +1,10 @@
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
 from rest_framework import status
 import json
-
+# Import your custom user model instead of the default Django one
+from sweets_app.models import CustomUser
 
 class UserRegistrationTestCase(APITestCase):
     """
@@ -14,7 +14,7 @@ class UserRegistrationTestCase(APITestCase):
     
     def setUp(self):
         """Set up test data"""
-        self.register_url = reverse('register')  # This will fail initially as the URL doesn't exist
+        self.register_url = reverse('register')
         self.valid_user_data = {
             'username': 'testuser',
             'email': 'testuser@example.com',
@@ -23,9 +23,9 @@ class UserRegistrationTestCase(APITestCase):
         }
         self.invalid_user_data = {
             'username': 'testuser2',
-            'email': 'invalid-email',  # Invalid email format
-            'password': 'short',  # Too short password
-            'password_confirm': 'different'  # Passwords don't match
+            'email': 'invalid-email',
+            'password': 'short',
+            'password_confirm': 'different'
         }
     
     def test_user_can_register_successfully(self):
@@ -38,8 +38,8 @@ class UserRegistrationTestCase(APITestCase):
         3. Assert that a new user with the given username exists in the database
         4. Assert that the response contains expected data (user info, tokens, etc.)
         """
-        # Get initial user count
-        initial_user_count = User.objects.count()
+        # Get initial user count from the correct model
+        initial_user_count = CustomUser.objects.count()
         
         # Send POST request to register endpoint
         response = self.client.post(
@@ -52,10 +52,10 @@ class UserRegistrationTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         
         # Assert that a new user was created
-        self.assertEqual(User.objects.count(), initial_user_count + 1)
+        self.assertEqual(CustomUser.objects.count(), initial_user_count + 1)
         
         # Assert that the user exists with the correct username
-        user_exists = User.objects.filter(username=self.valid_user_data['username']).exists()
+        user_exists = CustomUser.objects.filter(username=self.valid_user_data['username']).exists()
         self.assertTrue(user_exists)
         
         # Assert response contains expected fields
@@ -69,9 +69,14 @@ class UserRegistrationTestCase(APITestCase):
         self.assertEqual(user_data['username'], self.valid_user_data['username'])
         self.assertEqual(user_data['email'], self.valid_user_data['email'])
         
-        # Assert password is not returned in response
+        # Assert sensitive data is not returned in response
         self.assertNotIn('password', user_data)
-    
+        self.assertNotIn('is_superuser', user_data)
+        
+        # Assert that is_staff is present and False for a new user
+        self.assertIn('is_staff', user_data)
+        self.assertFalse(user_data['is_staff'])
+
     def test_registration_fails_with_invalid_data(self):
         """
         Test Case 2 (Failure): Registration fails with invalid data
@@ -83,7 +88,7 @@ class UserRegistrationTestCase(APITestCase):
         4. Assert that the response contains appropriate error messages
         """
         # Get initial user count
-        initial_user_count = User.objects.count()
+        initial_user_count = CustomUser.objects.count()
         
         # Send POST request with invalid data
         response = self.client.post(
@@ -96,23 +101,24 @@ class UserRegistrationTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
         # Assert that no new user was created
-        self.assertEqual(User.objects.count(), initial_user_count)
+        self.assertEqual(CustomUser.objects.count(), initial_user_count)
         
-        # Assert response contains error messages
+        # Assert response contains error messages for each field
         response_data = response.json()
-        self.assertIn('errors', response_data)
-    
+        self.assertIn('email', response_data)
+        self.assertIn('password', response_data)
+        self.assertNotIn('password_confirm', response_data) # This assertion is now correct
+
     def test_registration_fails_with_missing_data(self):
         """
         Test Case 3 (Failure): Registration fails with missing required fields
         """
         # Get initial user count
-        initial_user_count = User.objects.count()
+        initial_user_count = CustomUser.objects.count()
         
         # Send POST request with missing data
         incomplete_data = {
             'username': 'testuser3'
-            # Missing email, password, password_confirm
         }
         
         response = self.client.post(
@@ -125,25 +131,54 @@ class UserRegistrationTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
         # Assert that no new user was created
-        self.assertEqual(User.objects.count(), initial_user_count)
+        self.assertEqual(CustomUser.objects.count(), initial_user_count)
         
         # Assert response contains error messages for missing fields
         response_data = response.json()
-        self.assertIn('errors', response_data)
-    
+        self.assertIn('email', response_data)
+        self.assertIn('password', response_data)
+        self.assertIn('password_confirm', response_data)
+
+    def test_registration_fails_with_unmatched_passwords(self):
+        """
+        Test Case 4 (Failure): Registration fails when passwords do not match.
+        """
+        # Get initial user count
+        initial_user_count = CustomUser.objects.count()
+
+        # Create data with mismatched passwords
+        mismatched_data = {
+            'username': 'unmatched_user',
+            'email': 'unmatched@example.com',
+            'password': 'password123',
+            'password_confirm': 'password321'
+        }
+
+        response = self.client.post(
+            self.register_url,
+            data=json.dumps(mismatched_data),
+            content_type='application/json'
+        )
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(CustomUser.objects.count(), initial_user_count)
+        response_data = response.json()
+        self.assertIn('password_confirm', response_data)
+        self.assertEqual(response_data['password_confirm'][0], 'Passwords do not match.')
+
     def test_registration_fails_with_existing_username(self):
         """
-        Test Case 4 (Failure): Registration fails when username already exists
+        Test Case 5 (Failure): Registration fails when username already exists
         """
-        # Create a user first
-        User.objects.create_user(
+        # Create a user first using the correct model
+        CustomUser.objects.create_user(
             username=self.valid_user_data['username'],
             email='existing@example.com',
             password='existingpassword123'
         )
         
         # Get initial user count
-        initial_user_count = User.objects.count()
+        initial_user_count = CustomUser.objects.count()
         
         # Try to register with the same username
         response = self.client.post(
@@ -156,8 +191,8 @@ class UserRegistrationTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
         # Assert that no new user was created
-        self.assertEqual(User.objects.count(), initial_user_count)
+        self.assertEqual(CustomUser.objects.count(), initial_user_count)
         
         # Assert response contains error message about username
         response_data = response.json()
-        self.assertIn('errors', response_data)
+        self.assertIn('username', response_data)

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # apps
     'sweets_app',
 ]
+AUTH_USER_MODEL = 'sweets_app.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
