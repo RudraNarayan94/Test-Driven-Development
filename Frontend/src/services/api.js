@@ -48,10 +48,10 @@ class ApiService {
   }
 
   /**
-   * Generic API request handler
+   * Make a generic API request
    * @param {string} endpoint - API endpoint
-   * @param {Object} options - Fetch options
-   * @returns {Promise} API response with success/error structure
+   * @param {Object} options - Request options
+   * @returns {Promise} API response
    */
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
@@ -98,7 +98,6 @@ class ApiService {
     }
   }
 
-  // Authentication endpoints
   async register(userData) {
     return this.request("/auth/register/", {
       method: "POST",
@@ -113,7 +112,6 @@ class ApiService {
     });
   }
 
-  // Sweet management endpoints
   async getSweets() {
     const response = await this.request("/sweets/");
     if (response.success && response.data) {
@@ -123,7 +121,6 @@ class ApiService {
   }
 
   async addSweet(sweetData) {
-    // Transform quantity to quantity_in_stock for backend
     const backendData = {
       ...sweetData,
       quantity_in_stock: sweetData.quantity,
@@ -142,7 +139,6 @@ class ApiService {
   }
 
   async updateSweet(id, sweetData) {
-    // Transform quantity to quantity_in_stock for backend
     const backendData = {
       ...sweetData,
       quantity_in_stock: sweetData.quantity,
@@ -201,5 +197,4 @@ class ApiService {
   }
 }
 
-// Export singleton instance
 export default new ApiService();
