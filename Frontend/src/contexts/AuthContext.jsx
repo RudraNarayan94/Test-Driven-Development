@@ -1,8 +1,3 @@
-/**
- * Authentication Context
- * Manages user authentication state and operations
- */
-
 import { createContext, useContext, useState, useEffect } from "react";
 import apiService from "../services/api";
 
